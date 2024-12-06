@@ -65,7 +65,9 @@ fn try_main() -> Result<()> {
     }
 
     let mut wtr = args.stdout();
-    if args.list() {
+    if args.chart() {
+        output::chart(&mut wtr, &comps)?;
+    } else if args.list() {
         output::rows(&mut wtr, &comps)?;
     } else {
         output::columns(&mut wtr, &comps)?;

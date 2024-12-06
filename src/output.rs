@@ -1,4 +1,5 @@
 use std::collections::{BTreeMap, BTreeSet};
+use std::io::Write;
 use std::iter;
 
 use termcolor::{Color, ColorSpec, WriteColor};
@@ -143,6 +144,57 @@ pub fn columns<W: WriteColor>(
             }
         }
         writeln!(wtr, "")?;
+    }
+    Ok(())
+}
+
+fn safe_string(str: &str) -> String {
+    str.replace("/", "-").replace(" ", "").replace("\"", "'").replace("_", "-")
+}
+
+pub fn chart<W: Write>(mut wtr: W, groups: &[Comparison]) -> Result<()> {
+    const PROLOGUE: &str = r###"set auto x
+set auto y
+set style data histogram
+set style histogram cluster gap 1
+set style fill solid border -1
+set title "Benchmarks"
+# set output "benchmarks.svg"
+set boxwidth 0.9
+set xtic scale 0
+set term svg"###;
+    writeln!(wtr, "{}", PROLOGUE)?;
+
+    writeln!(wtr, "$Data << EOD")?;
+    /*
+    write!(wtr, "# Title")?;
+    for bench in &groups[0].benchmarks {
+        write!(wtr, " {}", safe_string(&bench.name))?
+    }
+    writeln!(wtr, "")?;
+    */
+    for group in groups {
+        let name = safe_string(&group.name);
+        write!(wtr, r#""{}""#, name)?;
+        for b in &group.benchmarks {
+            write!(wtr, " {}", b.nanoseconds)?;
+        }
+        writeln!(wtr, "")?;
+    }
+    write!(wtr, "EOD\n\nplot")?;
+    let num_benches = groups[0].benchmarks.len();
+    for (i, bench) in groups[0].benchmarks.iter().enumerate() {
+        let tic = if i == 0 { ":xtic(1)" } else { "" };
+        let name = safe_string(&bench.name);
+        let eol = if i == num_benches - 1 { "" } else { "," };
+        write!(
+            wtr,
+            r#" $Data using {}{} title "{}"{}"#,
+            i + 2,
+            tic,
+            name,
+            eol
+        )?;
     }
     Ok(())
 }

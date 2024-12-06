@@ -194,6 +194,10 @@ impl Args {
         self.0.is_present("list")
     }
 
+    pub fn chart(&self) -> bool {
+        self.0.is_present("chart")
+    }
+
     pub fn export(&self) -> Option<String> {
         self.0.value_of_lossy("export").map(|v| v.into_owned())
     }
@@ -279,6 +283,9 @@ fn app() -> App<'static, 'static> {
             .help("Show each benchmark comparison as a list. This is useful \
                    when there are many comparisons for each benchmark such \
                    that they no longer fit in a column view."))
+        .arg(Arg::with_name("chart")
+            .long("chart")
+            .help("Generate a gnuplot chart of your results"))
         .arg(Arg::with_name("filter")
             .long("filter")
             .short("f")
